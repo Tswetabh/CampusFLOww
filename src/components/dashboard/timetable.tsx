@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -9,7 +8,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { mockTimetable } from '@/lib/data';
 import type { TimetableEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Clock, Book, FlaskConical, Coffee, Sparkles } from 'lucide-react';
@@ -20,21 +18,12 @@ const typeIconMapping = {
   break: Coffee,
 };
 
-export default function Timetable() {
-  const [timetable, setTimetable] = useState<TimetableEntry[]>(mockTimetable);
+type TimetableProps = {
+  timetable: TimetableEntry[];
+  toggleStatus: (id: number) => void;
+};
 
-  const toggleStatus = (id: number) => {
-    setTimetable((prev) =>
-      prev.map((entry) =>
-        entry.id === id
-          ? {
-              ...entry,
-              status: entry.status === 'scheduled' ? 'cancelled' : 'scheduled',
-            }
-          : entry
-      )
-    );
-  };
+export default function Timetable({ timetable, toggleStatus }: TimetableProps) {
 
   const isFreeSlot = (entry: TimetableEntry) => {
     return entry.type === 'break' || entry.status === 'cancelled';
@@ -51,7 +40,7 @@ export default function Timetable() {
       <CardContent>
         <ul className="space-y-4">
           {timetable.map((entry) => {
-            const Icon = typeIconMapping[entry.type as keyof typeof typeIconMapping] || Clock;
+            const Icon = typeIconMapping[entry.type as keyof typeof typeIconmapping] || Clock;
             const isFree = isFreeSlot(entry);
 
             return (
@@ -79,7 +68,7 @@ export default function Timetable() {
                     size="sm"
                     onClick={() => toggleStatus(entry.id)}
                   >
-                    {entry.status === 'scheduled' ? 'Cancel' : 'Cancelled'}
+                    {entry.status === 'scheduled' ? 'Cancel' : 'Restore'}
                   </Button>
                 )}
               </li>
