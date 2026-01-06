@@ -41,3 +41,9 @@ export type Issue = {
     raisedOn: Date;
     closedOn?: Date;
 }
+
+export type SubjectAttendance = {
+    name: string;
+    attended: number;
+    total: number;
+};
