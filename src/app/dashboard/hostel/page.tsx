@@ -1,8 +1,8 @@
 'use client';
 
-import { FoodMenuCard } from "@/components/hostel/food-menu-card";
 import { HostelIssueTrackerCard } from "@/components/hostel/issue-tracker-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FoodMenuCard } from "@/components/hostel/food-menu-card";
 
 export default function HostelPage() {
     return (

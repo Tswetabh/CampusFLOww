@@ -31,3 +31,13 @@ export type Task = {
   duration: string;
   completed: boolean;
 };
+
+export type Issue = {
+    id: string;
+    roomNumber: string;
+    category: string;
+    description: string;
+    status: 'Pending' | 'Active' | 'Closed';
+    raisedOn: Date;
+    closedOn?: Date;
+}

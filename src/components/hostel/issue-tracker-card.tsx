@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,9 +18,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from "@/hooks/use-toast";
-import { Badge } from '../ui/badge';
 import { Ticket, Sparkles, Zap, Utensils, Wifi, WashingMachine, DoorOpen, Shield, Lightbulb, FileText, CreditCard, Wrench, UserX } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { Issue } from '@/lib/types';
+
 
 const categories = {
     "Stay Services": [
@@ -52,29 +54,9 @@ const issueFormSchema = z.object({
   description: z.string().min(10, 'Please provide a detailed description (min. 10 characters).'),
 });
 
-type Issue = {
-    id: number;
-    roomNumber: string;
-    category: string;
-    description: string;
-    status: 'Pending' | 'In Progress' | 'Resolved';
-    date: string;
-}
-
-const initialIssues: Issue[] = [
-    { id: 1, roomNumber: 'G-203', category: 'Electricity', description: 'The fan is not working. It makes a loud noise but does not spin.', status: 'Pending', date: '2024-07-29'},
-    { id: 2, roomNumber: 'F-101', category: 'Cleanliness', description: 'The room has not been cleaned for 3 days.', status: 'Resolved', date: '2024-07-27'},
-]
-
-const statusVariantMapping = {
-    Pending: 'destructive',
-    'In Progress': 'secondary',
-    Resolved: 'default',
-} as const;
-
 
 export function HostelIssueTrackerCard() {
-  const [issues, setIssues] = useState<Issue[]>(initialIssues);
+  const [issues, setIssues] = useState<Issue[]>([]);
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
 
@@ -93,10 +75,10 @@ export function HostelIssueTrackerCard() {
 
   function onSubmit(values: z.infer<typeof issueFormSchema>) {
     const newIssue: Issue = {
-        id: issues.length + 1,
+        id: `AL-${Math.floor(Math.random() * 900000) + 100000}`,
         ...values,
         status: 'Pending',
-        date: new Date().toISOString().split('T')[0],
+        raisedOn: new Date(),
     }
     setIssues([newIssue, ...issues]);
     toast({
@@ -112,7 +94,11 @@ export function HostelIssueTrackerCard() {
       <CardHeader>
         <div className='flex justify-between items-center'>
             <CardTitle className="font-headline">Support</CardTitle>
-            <Button variant="link"> <Ticket className='mr-2' /> Ticket History</Button>
+            <Button variant="link" asChild>
+              <Link href="/dashboard/hostel/tickets">
+                <Ticket className='mr-2' /> Ticket History
+              </Link>
+            </Button>
         </div>
         {!showForm && 
             <CardDescription>
@@ -187,27 +173,6 @@ export function HostelIssueTrackerCard() {
             </form>
         </Form>
       )}
-
-      <CardContent>
-        <h3 className="font-headline text-lg font-semibold my-4">Submitted Tickets</h3>
-        <div className="space-y-4">
-            {issues.map(issue => (
-                <div key={issue.id} className="flex items-start gap-4 rounded-lg border p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                        <Ticket className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                            <p className="font-semibold">{issue.category} <span className="text-muted-foreground font-normal">({issue.roomNumber})</span></p>
-                            <Badge variant={statusVariantMapping[issue.status]}>{issue.status}</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">{issue.description}</p>
-                        <p className="text-xs text-muted-foreground mt-2">{issue.date}</p>
-                    </div>
-                </div>
-            ))}
-        </div>
-      </CardContent>
     </Card>
   );
 }
