@@ -20,6 +20,7 @@ import {
   Calendar,
   BarChart,
   ClipboardCheck,
+  Plus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -29,10 +30,23 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '../ui/skeleton';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export function AttendanceManager() {
   const [subjects, setSubjects] = useState<SubjectAttendance[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newSubjectName, setNewSubjectName] = useState('');
   const targetAttendance = 75;
 
   useEffect(() => {
@@ -61,6 +75,21 @@ export function AttendanceManager() {
       })
     );
   };
+  
+  const handleAddSubject = () => {
+    if (newSubjectName.trim() === '') return;
+    setSubjects(prev => [...prev, { name: newSubjectName, attended: 0, total: 0 }]);
+    setNewSubjectName('');
+    setIsAddDialogOpen(false);
+  }
+
+  const handleResetSubject = (subjectName: string) => {
+    setSubjects(prev => prev.map(s => s.name === subjectName ? {...s, attended: 0, total: 0} : s));
+  }
+
+  const handleDeleteSubject = (subjectName: string) => {
+    setSubjects(prev => prev.filter(s => s.name !== subjectName));
+  }
 
   const getStatus = (attended: number, total: number) => {
     const currentPercentage = total > 0 ? (attended / total) * 100 : 0;
@@ -104,23 +133,15 @@ export function AttendanceManager() {
                         <CardDescription>Target: {targetAttendance}%</CardDescription>
                         <Skeleton className="h-7 w-48 mt-1" />
                         <p className="text-sm text-muted-foreground mt-1">
-                            {format(new Date(), 'dd MMM, yyyy')}
+                            <Skeleton className="h-4 w-24" />
                         </p>
                     </div>
                      <div className="flex flex-col items-end gap-2">
-                        <Button className="bg-green-500 hover:bg-green-600 text-white">
-                        Add Subject
-                        </Button>
+                        <Skeleton className="h-10 w-28" />
                         <div className="flex gap-2">
-                            <Button variant="ghost" size="icon">
-                                <Calendar className="h-5 w-5" />
-                            </Button>
-                            <Button variant="ghost" size="icon">
-                                <BarChart className="h-5 w-5" />
-                            </Button>
-                            <Button variant="ghost" size="icon">
-                                <ClipboardCheck className="h-5 w-5" />
-                            </Button>
+                            <Skeleton className="h-10 w-10" />
+                            <Skeleton className="h-10 w-10" />
+                            <Skeleton className="h-10 w-10" />
                         </div>
                     </div>
                 </div>
@@ -160,9 +181,38 @@ export function AttendanceManager() {
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <Button className="bg-green-500 hover:bg-green-600 text-white">
-              Add Subject
-            </Button>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                      <Plus className="mr-2 h-4 w-4" /> Add Subject
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Add New Subject</DialogTitle>
+                        <DialogDescription>
+                            Enter the name of the new subject you want to track.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="name" className="text-right">
+                                Subject
+                            </Label>
+                            <Input
+                                id="name"
+                                value={newSubjectName}
+                                onChange={(e) => setNewSubjectName(e.target.value)}
+                                className="col-span-3"
+                                placeholder="e.g. Artificial Intelligence"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" onClick={handleAddSubject}>Add Subject</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
             <div className="flex gap-2">
               <Button variant="ghost" size="icon">
                 <Calendar className="h-5 w-5" />
@@ -242,9 +292,13 @@ export function AttendanceManager() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>Reset</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
+                      <DropdownMenuItem onClick={() => handleResetSubject(subject.name)}>
+                        Reset
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-destructive"
+                        onClick={() => handleDeleteSubject(subject.name)}
+                      >
                         Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -258,3 +312,5 @@ export function AttendanceManager() {
     </Card>
   );
 }
+
+    
