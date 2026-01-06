@@ -18,12 +18,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from '../ui/badge';
-import { Ticket, Broom, Zap, Utensils, Wifi, WashingMachine, DoorOpen, Shield, Lightbulb, FileText, CreditCard, Wrench, UserX } from 'lucide-react';
+import { Ticket, Sparkles, Zap, Utensils, Wifi, WashingMachine, DoorOpen, Shield, Lightbulb, FileText, CreditCard, Wrench, UserX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const categories = {
     "Stay Services": [
-        { name: "Cleanliness", icon: Broom },
+        { name: "Cleanliness", icon: Sparkles },
         { name: "Electricity", icon: Zap },
         { name: "Food", icon: Utensils },
         { name: "Internet", icon: Wifi },
@@ -42,7 +42,7 @@ const categories = {
     ]
 } as const;
 
-const allCategoryNames = Object.values(categories).flatMap(group => group.map(cat => cat.name));
+const allCategoryNames = Object.values(categories).flatMap(group => group.map(cat => cat.name)) as [string, ...string[]];
 
 const issueFormSchema = z.object({
   roomNumber: z.string().min(1, 'Room number is required'),
