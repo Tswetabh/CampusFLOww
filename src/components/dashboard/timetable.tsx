@@ -21,12 +21,13 @@ const typeIconMapping = {
 
 type TimetableProps = {
   timetable: TimetableEntry[];
-  toggleStatus: (id: number) => void;
+  toggleStatus: (day: string, id: number) => void;
   tasks: Task[];
-  replaceTask: (id: number) => void;
+  replaceTask: (day: string, id: number) => void;
+  selectedDay: string;
 };
 
-export default function Timetable({ timetable, toggleStatus, tasks, replaceTask }: TimetableProps) {
+export default function Timetable({ timetable, toggleStatus, tasks, replaceTask, selectedDay }: TimetableProps) {
 
   const isFreeSlot = (entry: TimetableEntry) => {
     return entry.type === 'break' && entry.subject === 'Free Slot';
@@ -35,74 +36,80 @@ export default function Timetable({ timetable, toggleStatus, tasks, replaceTask 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Today's Schedule</CardTitle>
+        <CardTitle className="font-headline">{selectedDay}'s Schedule</CardTitle>
         <CardDescription>
-          Here is your schedule for today. Mark classes as cancelled to find free slots.
+          Here is your schedule for {selectedDay}. Mark classes as cancelled to find free slots.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ul className="space-y-4">
-          {timetable.map((entry) => {
-            const Icon = typeIconMapping[entry.type as keyof typeof typeIconmapping] || Clock;
-            const isFree = isFreeSlot(entry);
-            const isCancelled = entry.status === 'cancelled';
+        {timetable.length > 0 ? (
+            <ul className="space-y-4">
+            {timetable.map((entry) => {
+                const Icon = typeIconMapping[entry.type as keyof typeof typeIconmapping] || Clock;
+                const isFree = isFreeSlot(entry);
+                const isCancelled = entry.status === 'cancelled';
 
-            return (
-              <li
-                key={entry.id}
-                className={cn(
-                  'flex items-center space-x-4 rounded-lg border p-4 transition-all',
-                   isFree ? 'bg-accent/10 border-accent/20' : 'bg-card',
-                   isCancelled ? 'bg-muted/50 border-dashed' : ''
-                )}
-              >
-                <div className={cn("flex h-10 w-10 items-center justify-center rounded-full", isFree || entry.type === 'task' ? "bg-accent text-accent-foreground" : "bg-primary/10 text-primary")}>
-                    {isFree ? <Sparkles className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
-                </div>
-
-                <div className="flex-1">
-                  <p className={cn("font-semibold", isCancelled && "line-through")}>{entry.subject}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {entry.startTime} - {entry.endTime}
-                  </p>
-                </div>
-
-                {entry.type !== 'break' && (
-                  <div className="flex gap-2">
-                    {isCancelled ? (
-                        <>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => toggleStatus(entry.id)}
-                                >
-                                Restore
-                            </Button>
-                            {tasks.length > 0 && (
-                                <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={() => replaceTask(entry.id)}
-                                >
-                                    Replace
-                                </Button>
-                            )}
-                        </>
-                    ) : (
-                        <Button
-                            variant={'outline'}
-                            size="sm"
-                            onClick={() => toggleStatus(entry.id)}
-                        >
-                            Cancel
-                        </Button>
+                return (
+                <li
+                    key={entry.id}
+                    className={cn(
+                    'flex items-center space-x-4 rounded-lg border p-4 transition-all',
+                    isFree ? 'bg-accent/10 border-accent/20' : 'bg-card',
+                    isCancelled ? 'bg-muted/50 border-dashed' : ''
                     )}
-                   </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                >
+                    <div className={cn("flex h-10 w-10 items-center justify-center rounded-full", isFree || entry.type === 'task' ? "bg-accent text-accent-foreground" : "bg-primary/10 text-primary")}>
+                        {isFree ? <Sparkles className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+                    </div>
+
+                    <div className="flex-1">
+                    <p className={cn("font-semibold", isCancelled && "line-through")}>{entry.subject}</p>
+                    <p className="text-sm text-muted-foreground">
+                        {entry.startTime} - {entry.endTime}
+                    </p>
+                    </div>
+
+                    {entry.type !== 'break' && (
+                    <div className="flex gap-2">
+                        {isCancelled ? (
+                            <>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => toggleStatus(entry.day, entry.id)}
+                                    >
+                                    Restore
+                                </Button>
+                                {tasks.length > 0 && (
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={() => replaceTask(entry.day, entry.id)}
+                                    >
+                                        Replace
+                                    </Button>
+                                )}
+                            </>
+                        ) : (
+                            <Button
+                                variant={'outline'}
+                                size="sm"
+                                onClick={() => toggleStatus(entry.day, entry.id)}
+                            >
+                                Cancel
+                            </Button>
+                        )}
+                    </div>
+                    )}
+                </li>
+                );
+            })}
+            </ul>
+        ) : (
+            <div className="text-center text-muted-foreground py-10">
+                <p>No schedule for {selectedDay}. Enjoy your day off!</p>
+            </div>
+        )}
       </CardContent>
     </Card>
   );

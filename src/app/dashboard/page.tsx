@@ -5,12 +5,22 @@ import WelcomeHeader from "@/components/dashboard/welcome-header";
 import QuickStats from "@/components/dashboard/quick-stats";
 import Timetable from "@/components/dashboard/timetable";
 import TodoList from "@/components/dashboard/todo-list";
-import { mockUser, mockTimetable } from "@/lib/data";
+import { mockUser, mockWeeklyTimetable } from "@/lib/data";
 import type { TimetableEntry, Task } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { CollegeTimetable } from '@/components/dashboard/college-timetable';
+
+const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+const getCurrentDay = () => {
+    const today = new Date().getDay();
+    return weekDays[today];
+}
 
 export default function DashboardPage() {
-    const [timetable, setTimetable] = useState<TimetableEntry[]>(mockTimetable);
+    const [weeklyTimetable, setWeeklyTimetable] = useState<{ [key: string]: TimetableEntry[] }>(mockWeeklyTimetable);
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [selectedDay, setSelectedDay] = useState<string>(getCurrentDay());
 
     const handleAddTask = (taskName: string) => {
         const newTask: Task = {
@@ -22,32 +32,41 @@ export default function DashboardPage() {
         };
 
         let taskAddedToTimetable = false;
-        const newTimetable = timetable.map(entry => {
-            if (!taskAddedToTimetable && entry.subject === 'Free Slot') {
-                taskAddedToTimetable = true;
-                return {
-                    ...entry,
-                    subject: taskName,
-                    type: 'task',
-                };
-            }
-            return entry;
+        
+        setWeeklyTimetable(prev => {
+            const newWeeklyTimetable = { ...prev };
+            const daySchedule = newWeeklyTimetable[selectedDay];
+
+            const newDaySchedule = daySchedule.map(entry => {
+                if (!taskAddedToTimetable && entry.subject === 'Free Slot') {
+                    taskAddedToTimetable = true;
+                    return {
+                        ...entry,
+                        subject: taskName,
+                        type: 'task',
+                    };
+                }
+                return entry;
+            });
+            
+            newWeeklyTimetable[selectedDay] = newDaySchedule;
+            return newWeeklyTimetable;
         });
 
-        if (taskAddedToTimetable) {
-            setTimetable(newTimetable);
-        } else {
-            // If no free slot, just add to tasks list
+
+        if (!taskAddedToTimetable) {
             setTasks(prevTasks => [...prevTasks, newTask]);
         }
     };
     
-    const handleReplaceTask = (timetableId: number) => {
+    const handleReplaceTask = (day: string, timetableId: number) => {
         if (tasks.length > 0) {
             const nextTask = tasks[0];
             setTasks(prev => prev.slice(1));
-            setTimetable(prevTimetable => {
-                return prevTimetable.map(entry => {
+            setWeeklyTimetable(prev => {
+                const newWeeklyTimetable = {...prev};
+                const daySchedule = newWeeklyTimetable[day];
+                const newDaySchedule = daySchedule.map(entry => {
                     if (entry.id === timetableId) {
                         return {
                             ...entry,
@@ -58,25 +77,33 @@ export default function DashboardPage() {
                     }
                     return entry;
                 })
+                newWeeklyTimetable[day] = newDaySchedule;
+                return newWeeklyTimetable;
             })
         }
     };
 
-    const toggleTimetableStatus = (id: number) => {
-        setTimetable(prev =>
-            prev.map(entry => {
+    const toggleTimetableStatus = (day: string, id: number) => {
+        setWeeklyTimetable(prev => {
+            const newWeeklyTimetable = {...prev};
+            const daySchedule = newWeeklyTimetable[day];
+            const originalDaySchedule = mockWeeklyTimetable[day];
+
+            const newDaySchedule = daySchedule.map(entry => {
                 if (entry.id === id) {
-                    const originalEntry = mockTimetable.find(e => e.id === id);
                     if (entry.status === 'scheduled') {
                         return { ...entry, status: 'cancelled' };
                     } else {
-                        // If it was cancelled, revert it back. If it was a task, it will become a free slot.
-                         return { ...entry, status: 'scheduled', subject: originalEntry?.subject || 'Free Slot', type: originalEntry?.type || 'break' };
+                        const originalEntry = originalDaySchedule.find(e => e.id === id);
+                        return { ...entry, status: 'scheduled', subject: originalEntry?.subject || 'Free Slot', type: originalEntry?.type || 'break' };
                     }
                 }
                 return entry;
             })
-        );
+
+            newWeeklyTimetable[day] = newDaySchedule;
+            return newWeeklyTimetable;
+        });
     };
     
     return (
@@ -86,14 +113,31 @@ export default function DashboardPage() {
                 productivityScore={mockUser.productivityScore} 
                 academicRisk={mockUser.academicRisk} 
             />
+            
+            <div className="flex gap-2 items-center flex-wrap">
+                {weekDays.map(day => (
+                    <Button 
+                        key={day}
+                        variant={selectedDay === day ? 'default' : 'outline'}
+                        onClick={() => setSelectedDay(day)}
+                    >
+                        {day}
+                    </Button>
+                ))}
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Timetable 
-                    timetable={timetable} 
+                    timetable={weeklyTimetable[selectedDay]} 
                     toggleStatus={toggleTimetableStatus}
                     tasks={tasks}
                     replaceTask={handleReplaceTask}
+                    selectedDay={selectedDay}
                 />
-                <TodoList tasks={tasks} onAddTask={handleAddTask} />
+                <div className="space-y-6">
+                    <TodoList tasks={tasks} onAddTask={handleAddTask} />
+                    <CollegeTimetable />
+                </div>
             </div>
         </div>
     )
