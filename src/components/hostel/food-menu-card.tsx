@@ -25,24 +25,83 @@ const days = [
   { day: 'Fri', date: '09 Jan', progress: '0/4' },
 ];
 
-const menu = {
+const menuData: { [key: string]: any } = {
+  Today: {
     breakfast: [
-        { id: 'item-1', name: 'Aloo Paratha with Curd', description: 'Whole wheat flatbread stuffed with spiced potatoes, served with yogurt.', image: 'https://picsum.photos/seed/food1/100/100', default: true },
-        { id: 'item-2', name: 'Poha', description: 'Flattened rice with onions, potatoes, and spices.', image: 'https://picsum.photos/seed/food2/100/100' },
-        { id: 'item-3', name: 'Skip Breakfast', description: 'Help us cut down food wastage' },
+        { id: 'today-bf-1', name: 'Aloo Paratha with Curd', description: 'Whole wheat flatbread stuffed with spiced potatoes, served with yogurt.', image: 'https://picsum.photos/seed/food1/100/100', default: true },
+        { id: 'today-bf-2', name: 'Poha', description: 'Flattened rice with onions, potatoes, and spices.', image: 'https://picsum.photos/seed/food2/100/100' },
+        { id: 'today-bf-3', name: 'Skip Breakfast', description: 'Help us cut down food wastage' },
     ],
     lunch: [
-        { id: 'lunch-1', name: 'Rajma Chawal', description: 'Red kidney bean curry with steamed rice.', image: 'https://picsum.photos/seed/food3/100/100', default: true },
-        { id: 'lunch-2', name: 'Kadai Paneer & Roti', description: 'Indian cottage cheese in a spicy tomato-based gravy.', image: 'https://picsum.photos/seed/food4/100/100' },
+        { id: 'today-lunch-1', name: 'Rajma Chawal', description: 'Red kidney bean curry with steamed rice.', image: 'https://picsum.photos/seed/food3/100/100', default: true },
+        { id: 'today-lunch-2', name: 'Kadai Paneer & Roti', description: 'Indian cottage cheese in a spicy tomato-based gravy.', image: 'https://picsum.photos/seed/food4/100/100' },
     ],
     snacks: [
-        { id: 'snacks-1', name: 'Samosa with Chutney', description: 'Fried pastry with a savory filling of spiced potatoes, onions, and peas.', image: 'https://picsum.photos/seed/food5/100/100', default: true },
-        { id: 'snacks-2', name: 'Vada Pav', description: 'Deep-fried potato dumpling placed inside a bread bun.', image: 'https://picsum.photos/seed/food6/100/100' },
+        { id: 'today-snacks-1', name: 'Samosa with Chutney', description: 'Fried pastry with a savory filling of spiced potatoes, onions, and peas.', image: 'https://picsum.photos/seed/food5/100/100', default: true },
+        { id: 'today-snacks-2', name: 'Vada Pav', description: 'Deep-fried potato dumpling placed inside a bread bun.', image: 'https://picsum.photos/seed/food6/100/100' },
     ],
     dinner: [
-        { id: 'dinner-1', name: 'Chicken Biryani', description: 'A savory chicken and rice dish with spices.', image: 'https://picsum.photos/seed/food7/100/100', default: true },
-        { id: 'dinner-2', name: 'Dal Makhani with Naan', description: 'Creamy lentils with butter and spices, served with flatbread.', image: 'https://picsum.photos/seed/food8/100/100' },
+        { id: 'today-dinner-1', name: 'Chicken Biryani', description: 'A savory chicken and rice dish with spices.', image: 'https://picsum.photos/seed/food7/100/100', default: true },
+        { id: 'today-dinner-2', name: 'Dal Makhani with Naan', description: 'Creamy lentils with butter and spices, served with flatbread.', image: 'https://picsum.photos/seed/food8/100/100' },
     ]
+  },
+  Tom: {
+    breakfast: [
+      { id: 'tom-bf-1', name: 'Masala Dosa', description: 'A crisp and savory South Indian pancake, filled with spiced potatoes.', image: 'https://picsum.photos/seed/food9/100/100', default: true },
+      { id: 'tom-bf-2', name: 'Idli Sambar', description: 'Steamed rice cakes served with a tangy lentil soup.', image: 'https://picsum.photos/seed/food10/100/100' },
+      { id: 'tom-bf-3', name: 'Skip Breakfast', description: 'Help us cut down food wastage' },
+    ],
+    lunch: [
+      { id: 'tom-lunch-1', name: 'Chole Bhature', description: 'Spicy chickpeas with fluffy deep-fried bread.', image: 'https://picsum.photos/seed/food11/100/100', default: true },
+      { id: 'tom-lunch-2', name: 'Vegetable Pulao', description: 'A fragrant rice dish with mixed vegetables and spices.', image: 'https://picsum.photos/seed/food12/100/100' },
+    ],
+    snacks: [
+      { id: 'tom-snacks-1', name: 'Khandvi', description: 'Savory rolls made from gram flour, tempered with mustard seeds.', image: 'https://picsum.photos/seed/food13/100/100', default: true },
+      { id: 'tom-snacks-2', name: 'Dhokla', description: 'A steamed and spongy cake made from fermented rice and chickpea batter.', image: 'https://picsum.photos/seed/food14/100/100' },
+    ],
+    dinner: [
+      { id: 'tom-dinner-1', name: 'Paneer Butter Masala', description: 'Cottage cheese in a creamy tomato and butter sauce.', image: 'https://picsum.photos/seed/food15/100/100', default: true },
+      { id: 'tom-dinner-2', name: 'Fish Curry', description: 'A tangy and spicy fish curry, perfect with steamed rice.', image: 'https://picsum.photos/seed/food16/100/100' },
+    ],
+  },
+  Thu: {
+     breakfast: [
+      { id: 'thu-bf-1', name: 'Upma', description: 'A thick porridge made from dry-roasted semolina.', image: 'https://picsum.photos/seed/food17/100/100', default: true },
+      { id: 'thu-bf-2', name: 'Bread Omelette', description: 'A simple yet delicious omelette sandwich.', image: 'https://picsum.photos/seed/food18/100/100' },
+      { id: 'thu-bf-3', name: 'Skip Breakfast', description: 'Help us cut down food wastage' },
+    ],
+    lunch: [
+      { id: 'thu-lunch-1', name: 'Baingan Bharta & Roti', description: 'Smoky mashed eggplant cooked with spices.', image: 'https://picsum.photos/seed/food19/100/100', default: true },
+      { id: 'thu-lunch-2', name: 'Lemon Rice', description: 'A tangy and flavorful rice dish with a hint of lemon and peanuts.', image: 'https://picsum.photos/seed/food20/100/100' },
+    ],
+    snacks: [
+      { id: 'thu-snacks-1', name: 'Pakora', description: 'Assorted vegetables deep-fried in gram flour batter.', image: 'https://picsum.photos/seed/food21/100/100', default: true },
+      { id: 'thu-snacks-2', name: 'Aloo Chaat', description: 'Fried potato cubes tossed in spicy and tangy chutneys.', image: 'https://picsum.photos/seed/food22/100/100' },
+    ],
+    dinner: [
+      { id: 'thu-dinner-1', name: 'Mutton Rogan Josh', description: 'A fragrant lamb curry with a rich gravy.', image: 'https://picsum.photos/seed/food23/100/100', default: true },
+      { id: 'thu-dinner-2', name: 'Vegetable Korma', description: 'Mixed vegetables in a creamy and mildly spiced sauce.', image: 'https://picsum.photos/seed/food24/100/100' },
+    ]
+  },
+  Fri: {
+     breakfast: [
+      { id: 'fri-bf-1', name: 'Gobi Paratha', description: 'Flatbread stuffed with spiced cauliflower.', image: 'https://picsum.photos/seed/food25/100/100', default: true },
+      { id: 'fri-bf-2', name: 'Cheela', description: 'A savory pancake made from gram flour.', image: 'https://picsum.photos/seed/food26/100/100' },
+      { id: 'fri-bf-3', name: 'Skip Breakfast', description: 'Help us cut down food wastage' },
+    ],
+    lunch: [
+      { id: 'fri-lunch-1', name: 'Dal Tadka & Rice', description: 'Yellow lentils tempered with spices and ghee.', image: 'https://picsum.photos/seed/food27/100/100', default: true },
+      { id: 'fri-lunch-2', name: 'Bhindi Masala & Roti', description: 'Stir-fried okra with spices.', image: 'https://picsum.photos/seed/food28/100/100' },
+    ],
+    snacks: [
+      { id: 'fri-snacks-1', name: 'Dahi Vada', description: 'Lentil dumplings soaked in creamy yogurt.', image: 'https://picsum.photos/seed/food29/100/100', default: true },
+      { id: 'fri-snacks-2', name: 'Bhel Puri', description: 'A savory snack made with puffed rice, vegetables, and a tangy tamarind sauce.', image: 'https://picsum.photos/seed/food30/100/100' },
+    ],
+    dinner: [
+      { id: 'fri-dinner-1', name: 'Egg Curry', description: 'Boiled eggs cooked in a spicy onion and tomato gravy.', image: 'https://picsum.photos/seed/food31/100/100', default: true },
+      { id: 'fri-dinner-2', name: 'Malai Kofta', description: 'Potato and paneer balls in a rich, creamy sauce.', image: 'https://picsum.photos/seed/food32/100/100' },
+    ]
+  }
 };
 
 type MenuItem = {
@@ -55,16 +114,25 @@ type MenuItem = {
 
 export function FoodMenuCard() {
     const [selectedDay, setSelectedDay] = useState('Today');
-    const [selectedMeal, setSelectedMeal] = useState<{[key: string]: string}>({
-        breakfast: 'item-1',
-        lunch: 'lunch-1',
-        snacks: 'snacks-1',
-        dinner: 'dinner-1',
+    const [selectedMeal, setSelectedMeal] = useState<{ [key: string]: { [key: string]: string } }>({
+      Today: { breakfast: 'today-bf-1', lunch: 'today-lunch-1', snacks: 'today-snacks-1', dinner: 'today-dinner-1' },
+      Tom: { breakfast: 'tom-bf-1', lunch: 'tom-lunch-1', snacks: 'tom-snacks-1', dinner: 'tom-dinner-1' },
+      Thu: { breakfast: 'thu-bf-1', lunch: 'thu-lunch-1', snacks: 'thu-snacks-1', dinner: 'thu-dinner-1' },
+      Fri: { breakfast: 'fri-bf-1', lunch: 'fri-lunch-1', snacks: 'fri-snacks-1', dinner: 'fri-dinner-1' },
     });
 
     const handleSelectMeal = (mealType: string, itemId: string) => {
-        setSelectedMeal(prev => ({...prev, [mealType]: itemId}));
+        setSelectedMeal(prev => ({
+            ...prev,
+            [selectedDay]: {
+                ...prev[selectedDay],
+                [mealType]: itemId
+            }
+        }));
     }
+    
+    const menu = menuData[selectedDay];
+    const currentSelections = selectedMeal[selectedDay];
 
   return (
     <Card>
@@ -102,10 +170,10 @@ export function FoodMenuCard() {
                 <TabsTrigger value="dinner">Dinner</TabsTrigger>
             </TabsList>
             <TabsContent value="breakfast">
-                <RadioGroup value={selectedMeal.breakfast} onValueChange={(value) => handleSelectMeal('breakfast', value)}>
+                <RadioGroup value={currentSelections.breakfast} onValueChange={(value) => handleSelectMeal('breakfast', value)}>
                     <div className="space-y-4 pt-4">
-                        {menu.breakfast.map((item) => (
-                            <Label key={item.id} htmlFor={item.id} className={cn("flex items-center gap-4 rounded-lg border p-4 transition-all cursor-pointer", selectedMeal.breakfast === item.id && "bg-accent/10 border-accent")}>
+                        {menu.breakfast.map((item: MenuItem) => (
+                            <Label key={item.id} htmlFor={item.id} className={cn("flex items-center gap-4 rounded-lg border p-4 transition-all cursor-pointer", currentSelections.breakfast === item.id && "bg-accent/10 border-accent")}>
                                 {item.image && (
                                     <Image data-ai-hint="food meal" src={item.image} alt={item.name} width={64} height={64} className="rounded-full" />
                                 )}
@@ -126,10 +194,10 @@ export function FoodMenuCard() {
                 </RadioGroup>
             </TabsContent>
              <TabsContent value="lunch">
-                <RadioGroup value={selectedMeal.lunch} onValueChange={(value) => handleSelectMeal('lunch', value)}>
+                <RadioGroup value={currentSelections.lunch} onValueChange={(value) => handleSelectMeal('lunch', value)}>
                     <div className="space-y-4 pt-4">
-                        {menu.lunch.map((item) => (
-                            <Label key={item.id} htmlFor={item.id} className={cn("flex items-center gap-4 rounded-lg border p-4 transition-all cursor-pointer", selectedMeal.lunch === item.id && "bg-accent/10 border-accent")}>
+                        {menu.lunch.map((item: MenuItem) => (
+                            <Label key={item.id} htmlFor={item.id} className={cn("flex items-center gap-4 rounded-lg border p-4 transition-all cursor-pointer", currentSelections.lunch === item.id && "bg-accent/10 border-accent")}>
                                 {item.image && (
                                     <Image data-ai-hint="indian food" src={item.image} alt={item.name} width={64} height={64} className="rounded-full" />
                                 )}
@@ -145,10 +213,10 @@ export function FoodMenuCard() {
                 </RadioGroup>
             </TabsContent>
             <TabsContent value="snacks">
-                <RadioGroup value={selectedMeal.snacks} onValueChange={(value) => handleSelectMeal('snacks', value)}>
+                <RadioGroup value={currentSelections.snacks} onValueChange={(value) => handleSelectMeal('snacks', value)}>
                     <div className="space-y-4 pt-4">
-                        {menu.snacks.map((item) => (
-                            <Label key={item.id} htmlFor={item.id} className={cn("flex items-center gap-4 rounded-lg border p-4 transition-all cursor-pointer", selectedMeal.snacks === item.id && "bg-accent/10 border-accent")}>
+                        {menu.snacks.map((item: MenuItem) => (
+                            <Label key={item.id} htmlFor={item.id} className={cn("flex items-center gap-4 rounded-lg border p-4 transition-all cursor-pointer", currentSelections.snacks === item.id && "bg-accent/10 border-accent")}>
                                 {item.image && (
                                     <Image data-ai-hint="indian snacks" src={item.image} alt={item.name} width={64} height={64} className="rounded-full" />
                                 )}
@@ -164,10 +232,10 @@ export function FoodMenuCard() {
                 </RadioGroup>
             </TabsContent>
             <TabsContent value="dinner">
-                <RadioGroup value={selectedMeal.dinner} onValueChange={(value) => handleSelectMeal('dinner', value)}>
+                <RadioGroup value={currentSelections.dinner} onValueChange={(value) => handleSelectMeal('dinner', value)}>
                     <div className="space-y-4 pt-4">
-                        {menu.dinner.map((item) => (
-                            <Label key={item.id} htmlFor={item.id} className={cn("flex items-center gap-4 rounded-lg border p-4 transition-all cursor-pointer", selectedMeal.dinner === item.id && "bg-accent/10 border-accent")}>
+                        {menu.dinner.map((item: MenuItem) => (
+                            <Label key={item.id} htmlFor={item.id} className={cn("flex items-center gap-4 rounded-lg border p-4 transition-all cursor-pointer", currentSelections.dinner === item.id && "bg-accent/10 border-accent")}>
                                 {item.image && (
                                     <Image data-ai-hint="indian dinner" src={item.image} alt={item.name} width={64} height={64} className="rounded-full" />
                                 )}
