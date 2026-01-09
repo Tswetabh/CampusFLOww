@@ -155,13 +155,6 @@ export function FoodMenuCard() {
           ))}
         </div>
 
-        <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800 mb-6">
-            <Clock className="h-4 w-4 !text-red-800" />
-            <AlertDescription>
-                Your window to set preferences closed at 5:30 PM yesterday
-            </AlertDescription>
-        </Alert>
-
         <Tabs defaultValue="breakfast" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="breakfast">Breakfast</TabsTrigger>
