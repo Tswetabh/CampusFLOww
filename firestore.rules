@@ -1,50 +1,37 @@
 /**
- * This ruleset enforces a strict security model for the CampusFlow AI application.
+ * Core Philosophy: This ruleset enforces a strict user-ownership model. All personal data, including
+ * academic metrics, tasks, and timetable information, is nested under a private user-specific path
+ * (/users/{userId}), making it accessible only to the authenticated owner. A separate top-level
+ * collection (/hostelStatus) is provided for publicly readable, shared data.
  *
- * Core Philosophy:
- * The security model is built on a strong user-ownership principle. All personal user data is
- * strictly confined to that user's own data tree, making it inaccessible to other users.
- * Public-facing features like live study sessions and leaderboards are handled in separate,
- * top-level collections with carefully controlled write access and broader read access. The
- * default posture is to deny access unless explicitly granted.
- *
- * Data Structure:
- * - /users/{userId}/... : All private, user-specific data (profiles, tasks, session history)
- *   is nested under a path containing the user's UID. Access is controlled by this path.
- * - /liveStudySessions/{userId}: A top-level collection for real-time visibility. It is
- *   readable by all signed-in users but each user can only write to their own document.
- * - /dailyLeaderboard & /weeklyLeaderboard: Top-level collections that are read-only for
- *   clients. Data is expected to be aggregated and written by a trusted server environment
- *   (e.g., Cloud Functions).
+ * Data Structure: The database is segregated into two main areas:
+ * 1.  /users/{userId}/**: A private data tree for each user. All documents and subcollections
+ *     under this path belong exclusively to the user identified by {userId}.
+ * 2.  /hostelStatus/{hostelStatusId}: A top-level collection for shared information that all users
+ *     can read.
  *
  * Key Security Decisions:
- * - User data is private: Users can only read and write their own data within /users/{userId}.
- *   Listing other users' private data is prohibited.
- * - Live sessions are publicly visible: To support the "who is studying" feature, the list of
- *   live sessions is readable by any authenticated user. However, users can only create, update,
- *   or delete their own session document.
- * - Leaderboards are read-only: To prevent tampering, leaderboards are not writable by clients.
- *   This enforces the assumption that a backend process is responsible for calculating and
- *   populating leaderboard data.
- *
- * Denormalization for Authorization:
- * This ruleset relies on denormalized `userId` fields within documents in user subcollections
- * (e.g., tasks, timetables). On creation, the rules validate that this internal `userId` matches
- * the `userId` in the path, creating a secure link. On updates, this link is enforced as immutable.
- * This avoids costly `get` calls and strengthens security.
- *
- * Structural Segregation:
- * The design separates private historical data (/users/{userId}/focusSessions) from public real-time
- * data (/liveStudySessions). This segregation is critical for performance and security, as it allows
- * for safe, efficient list queries on the public collection without exposing private user history.
+ * - User Isolation: A user can only ever read or write data within their own document tree.
+ * - No User Listing: It is impossible for any client to list all documents in the `/users`
+ *   collection, preventing user enumeration.
+ * - Public Data Segregation: Publicly accessible data (HostelStatus) is stored in a separate
+ *   top-level collection to ensure clear and performant security boundaries, avoiding complex
+ *   query rules on mixed-privacy collections.
+ * - Denormalization for Authorization: User-owned documents in subcollections (e.g., Task)
+ *   contain a denormalized `userId` field. This is validated against the path on creation to
+ *   ensure relational integrity and allows for simple, performant ownership checks without
+ *   needing extra `get()` calls.
+ * - Secure Default for Shared Data: Writes to the public `/hostelStatus` collection are disabled by
+ *   default because the data model lacks an ownership field (e.g., 'adminId'). This defaults to
+ *   the most secure posture, requiring explicit action from a developer to open up write access.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    //-------------------------------------------------------------------------
+    // ----------------------------------------------------------------------
     // Helper Functions
-    //-------------------------------------------------------------------------
+    // ----------------------------------------------------------------------
 
     /**
      * Checks if the user is authenticated.
@@ -55,174 +42,117 @@ service cloud.firestore {
 
     /**
      * Checks if the currently authenticated user's UID matches the provided userId.
+     * This is the primary function for enforcing data ownership.
      */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
     /**
-     * Checks for ownership on an existing document. Used for update/delete.
-     * Denies requests for non-existent documents, which is a security best practice.
+     * A robust check for update and delete operations. Ensures the user is the owner AND
+     * that the document they are trying to modify actually exists.
      */
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
 
     /**
-     * Validates the integrity of a user's root document on creation.
-     * Ensures the document's internal ID matches the user's auth UID.
+     * Validates that the user's ID within the document data is correctly set
+     * to match the user ID from the path during document creation.
      */
-    function hasValidUserCreateData(userId) {
-      return request.resource.data.id == userId;
-    }
-
-    /**
-     * Enforces immutability of the user's root document ID on update.
-     */
-    function hasValidUserUpdateData() {
-      return request.resource.data.id == resource.data.id;
-    }
-
-    /**
-     * Validates relational integrity for a new document in a user's subcollection.
-     * Ensures the document contains a `userId` field that matches the owner's UID from the path.
-     */
-    function hasValidSubcollectionCreateData(userId) {
+    function hasCorrectUserIdOnCreate(userId) {
       return request.resource.data.userId == userId;
     }
 
     /**
-     * Enforces immutability of the `userId` field on a subcollection document update.
-     * This prevents re-assigning the document to a different user.
+     * Enforces immutability of the user ID field on update.
+     * Prevents re-assigning a document to a different user.
      */
-    function hasValidSubcollectionUpdateData() {
+    function userIdIsImmutable() {
       return request.resource.data.userId == resource.data.userId;
     }
 
-    /**
-     * Validates relational integrity for a new live study session.
-     * The document ID, internal ID, and userId must all match the creator's auth UID.
-     */
-    function hasValidLiveSessionCreateData(liveStudySessionId) {
-        return request.resource.data.id == liveStudySessionId
-            && request.resource.data.userId == liveStudySessionId;
-    }
+    // ----------------------------------------------------------------------
+    // Collection Rules
+    // ----------------------------------------------------------------------
 
     /**
-     * Enforces immutability of key relational fields for a live study session.
-     */
-    function hasValidLiveSessionUpdateData() {
-        return request.resource.data.id == resource.data.id
-            && request.resource.data.userId == resource.data.userId;
-    }
-
-    //-------------------------------------------------------------------------
-    // User Data Collections (/users)
-    //-------------------------------------------------------------------------
-
-    /**
-     * @description Manages user profile documents.
-     * @path /users/{userId}
-     * @allow (create) A new user signing up.
-     * @allow (get, update) An existing user accessing their own profile.
-     * @deny (get, list, update) Any user trying to access another user's profile.
-     * @principle Enforces self-creation and strict ownership of a user's root document.
+     * @description Manages user profile documents. A user can create their own profile,
+     *              and read, update, or delete it. Listing all users is forbidden.
+     * @path        /users/{userId}
+     * @allow       (create) An authenticated user creating their own profile document.
+     * @deny        (list) A user trying to list all documents in the `/users` collection.
+     * @principle   Restricts access to a user's own data tree and enforces self-creation.
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
-      allow list: if false; // Disallow listing all users for privacy.
-      allow create: if isOwner(userId) && hasValidUserCreateData(userId);
-      allow update: if isExistingOwner(userId) && hasValidUserUpdateData();
+      allow list: if false; // Disallow listing of user documents for privacy.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
       allow delete: if isExistingOwner(userId);
 
       /**
-       * @description User's personal timetable entries.
-       * @path /users/{userId}/timetables/{timetableId}
-       * @allow (create, get, list, update, delete) The owner of the timetable.
-       * @deny Any user who is not the owner.
-       * @principle Restricts access to a user's own data tree (Path-based ownership).
+       * @description Manages a user's private timetable slots. Only the owner can manage their timetable.
+       * @path        /users/{userId}/timetableSlots/{timetableSlotId}
+       * @allow       (create) A user creating a new timetable slot in their own timetable.
+       * @deny        (get) A user trying to read another user's timetable slot.
+       * @principle   Enforces document ownership for all operations within a user-specific subcollection.
        */
-      match /timetables/{timetableId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidSubcollectionCreateData(userId);
-        allow update: if isExistingOwner(userId) && hasValidSubcollectionUpdateData();
+      match /timetableSlots/{timetableSlotId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && hasCorrectUserIdOnCreate(userId);
+        allow update: if isExistingOwner(userId) && userIdIsImmutable();
         allow delete: if isExistingOwner(userId);
       }
 
       /**
-       * @description User's personal tasks.
-       * @path /users/{userId}/tasks/{taskId}
-       * @allow (create, get, list, update, delete) The owner of the tasks.
-       * @deny Any user who is not the owner.
-       * @principle Restricts access to a user's own data tree (Path-based ownership).
+       * @description Manages AI-suggested tasks for a user. Only the owner can manage their tasks.
+       * @path        /users/{userId}/tasks/{taskId}
+       * @allow       (update) A user marking one of their own tasks as complete.
+       * @deny        (delete) A user trying to delete a task from another user's list.
+       * @principle   Enforces document ownership and validates relational integrity via the `userId` field.
        */
       match /tasks/{taskId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidSubcollectionCreateData(userId);
-        allow update: if isExistingOwner(userId) && hasValidSubcollectionUpdateData();
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && hasCorrectUserIdOnCreate(userId);
+        allow update: if isExistingOwner(userId) && userIdIsImmutable();
         allow delete: if isExistingOwner(userId);
       }
 
       /**
-       * @description User's historical focus session logs.
-       * @path /users/{userId}/focusSessions/{focusSessionId}
-       * @allow (create, get, list, update, delete) The owner of the session logs.
-       * @deny Any user who is not the owner.
-       * @principle Restricts access to a user's own data tree (Path-based ownership).
+       * @description Manages a user's private academic metrics. Only the owner can manage these records.
+       * @path        /users/{userId}/academicMetrics/{academicMetricsId}
+       * @allow       (create) A user creating their initial academic metrics record.
+       * @deny        (get) A user attempting to access another user's academic performance data.
+       * @principle   Enforces document ownership for sensitive, user-specific data.
        */
-      match /focusSessions/{focusSessionId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidSubcollectionCreateData(userId);
-        allow update: if isExistingOwner(userId) && hasValidSubcollectionUpdateData();
+      match /academicMetrics/{academicMetricsId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && hasCorrectUserIdOnCreate(userId);
+        allow update: if isExistingOwner(userId) && userIdIsImmutable();
         allow delete: if isExistingOwner(userId);
       }
     }
 
-    //-------------------------------------------------------------------------
-    // Public Feature Collections
-    //-------------------------------------------------------------------------
-
     /**
-     * @description Real-time data for the "Who is studying now" feature.
-     * @path /liveStudySessions/{liveStudySessionId}
-     * @allow (get, list) Any authenticated user can see who is currently studying.
-     * @allow (create, update, delete) A user can only manage their own live session document.
-     * @deny (create) A user trying to create a session for another user.
-     * @principle Public read access for a feature, with strict ownership for all writes.
+     * @description Stores public information about hostel status. This data is readable by anyone
+     *              but cannot be modified by clients.
+     * @path        /hostelStatus/{hostelStatusId}
+     * @allow       (get, list) Any user (authenticated or not) reading the hostel status.
+     * @deny        (create, update, delete) Any client trying to modify hostel status records.
+     * @principle   Provides public read access for shared data while securing writes.
      */
-    match /liveStudySessions/{liveStudySessionId} {
-      allow get, list: if isSignedIn();
-      allow create: if isOwner(liveStudySessionId) && hasValidLiveSessionCreateData(liveStudySessionId);
-      allow update: if isExistingOwner(liveStudySessionId) && hasValidLiveSessionUpdateData();
-      allow delete: if isExistingOwner(liveStudySessionId);
-    }
-
-    /**
-     * @description Daily leaderboard data, aggregated by a backend process.
-     * @path /dailyLeaderboard/{date}/{userId}
-     * @allow (get, list) Any authenticated user can view the leaderboard.
-     * @deny (create, update, delete) All client-side writes are forbidden to prevent tampering.
-     * @principle Secures aggregated data by making it read-only for clients.
-     */
-    match /dailyLeaderboard/{date}/{userId} {
-      allow get, list: if isSignedIn();
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
-    }
-
-    /**
-     * @description Weekly leaderboard data, aggregated by a backend process.
-     * @path /weeklyLeaderboard/{yearWeek}/{userId}
-     * @allow (get, list) Any authenticated user can view the leaderboard.
-     * @deny (create, update, delete) All client-side writes are forbidden to prevent tampering.
-     * @principle Secures aggregated data by making it read-only for clients.
-     */
-    match /weeklyLeaderboard/{yearWeek}/{userId} {
-      allow get, list: if isSignedIn();
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+    match /hostelStatus/{hostelStatusId} {
+      allow get: if true;
+      allow list: if true;
+      // CRITICAL: The 'HostelStatus' entity is missing an ownership field (e.g., 'adminId', 'creatorId').
+      // Without it, secure write rules cannot be implemented. Writes are disabled by default.
+      allow create: if false; // TODO: Add admin/owner validation once the schema is updated.
+      allow update: if false; // TODO: Add admin/owner validation once the schema is updated.
+      allow delete: if false; // TODO: Add admin/owner validation once the schema is updated.
     }
   }
 }

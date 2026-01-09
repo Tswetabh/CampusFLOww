@@ -4,11 +4,11 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user within the CampusFlow AI application.",
+      "description": "Represents a user profile within the CampusFlow AI application.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the User entity."
+          "description": "Unique identifier for the user."
         },
         "name": {
           "type": "string",
@@ -20,7 +20,7 @@
         },
         "branch": {
           "type": "string",
-          "description": "The user's branch of study."
+          "description": "The user's academic branch or major."
         },
         "hostel": {
           "type": "string",
@@ -30,25 +30,9 @@
           "type": "number",
           "description": "The user's overall productivity score."
         },
-        "todaysStudyTime": {
-          "type": "number",
-          "description": "Total study time in minutes for the current day."
-        },
-        "totalStudyTime": {
-          "type": "number",
-          "description": "Total study time in minutes across all sessions."
-        },
-        "mostStudiedSubject": {
+        "academicRisk": {
           "type": "string",
-          "description": "The subject the user has studied the most."
-        },
-        "leastStudiedSubject": {
-          "type": "string",
-          "description": "The subject the user has studied the least."
-        },
-        "averageSessionLength": {
-          "type": "number",
-          "description": "Average study session duration in minutes."
+          "description": "The user's current academic risk level (Low, Medium, High)."
         }
       },
       "required": [
@@ -57,42 +41,43 @@
         "year",
         "branch",
         "hostel",
-        "productivityScore"
+        "productivityScore",
+        "academicRisk"
       ]
     },
-    "Timetable": {
+    "TimetableSlot": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Timetable",
+      "title": "TimetableSlot",
       "type": "object",
-      "description": "Represents a single entry in a user's timetable.",
+      "description": "Represents a single slot in a user's timetable.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the Timetable entry."
+          "description": "Unique identifier for the timetable slot."
         },
         "userId": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Timetable)"
+          "description": "Reference to User. (Relationship: User 1:N TimetableSlot)"
         },
         "day": {
           "type": "string",
-          "description": "The day of the week for the timetable entry."
+          "description": "The day of the week for the timetable slot."
         },
         "subject": {
           "type": "string",
-          "description": "The subject name for the timetable entry."
+          "description": "The subject or class name for the timetable slot."
         },
         "startTime": {
           "type": "string",
-          "description": "The start time of the class."
+          "description": "The start time of the timetable slot."
         },
         "endTime": {
           "type": "string",
-          "description": "The end time of the class."
+          "description": "The end time of the timetable slot."
         },
         "status": {
           "type": "string",
-          "description": "The status of the class (scheduled or cancelled)."
+          "description": "The status of the timetable slot (scheduled, cancelled)."
         }
       },
       "required": [
@@ -109,11 +94,11 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Task",
       "type": "object",
-      "description": "Represents a task suggested by the AI for the user to complete.",
+      "description": "Represents a task suggested by the AI productivity engine.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the Task entity."
+          "description": "Unique identifier for the task."
         },
         "userId": {
           "type": "string",
@@ -129,7 +114,7 @@
         },
         "duration": {
           "type": "string",
-          "description": "The recommended duration for the task."
+          "description": "The suggested duration of the task."
         },
         "completed": {
           "type": "boolean",
@@ -145,128 +130,74 @@
         "completed"
       ]
     },
-    "FocusSession": {
+    "AcademicMetrics": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "FocusSession",
+      "title": "AcademicMetrics",
       "type": "object",
-      "description": "Represents a single focus session.",
+      "description": "Represents a user's academic performance metrics.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the FocusSession entity."
+          "description": "Unique identifier for the academic metrics record."
         },
         "userId": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N FocusSession)"
+          "description": "Reference to User. (Relationship: User 1:1 AcademicMetrics)"
         },
-        "subject": {
-          "type": "string",
-          "description": "The subject studied during the focus session."
-        },
-        "taskType": {
-          "type": "string",
-          "description": "The type of task performed during the session (e.g., study, coding)."
-        },
-        "startTime": {
-          "type": "string",
-          "description": "The start time of the focus session."
-        },
-        "endTime": {
-          "type": "string",
-          "description": "The end time of the focus session."
-        },
-        "duration": {
+        "attendance": {
           "type": "number",
-          "description": "The duration of the focus session in minutes."
+          "description": "The user's attendance percentage."
         },
-        "interrupted": {
-          "type": "boolean",
-          "description": "Indicates whether the session was interrupted."
+        "assignmentsMissed": {
+          "type": "number",
+          "description": "The number of assignments missed by the user."
+        },
+        "stressLevel": {
+          "type": "number",
+          "description": "The user's self-reported stress level (1-5)."
         }
       },
       "required": [
         "id",
         "userId",
-        "subject",
-        "taskType",
-        "startTime",
-        "endTime",
-        "duration",
-        "interrupted"
+        "attendance",
+        "assignmentsMissed",
+        "stressLevel"
       ]
     },
-    "LiveStudySession": {
+    "HostelStatus": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "LiveStudySession",
+      "title": "HostelStatus",
       "type": "object",
-      "description": "Represents a user's live study session for real-time visibility.",
+      "description": "Represents the current status of the hostel environment.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the LiveStudySession entity.  Matches the User ID."
+          "description": "Unique identifier for the hostel status record."
         },
-        "userId": {
+        "laundryCrowdLevel": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:1 LiveStudySession). Should match 'id'."
+          "description": "The current laundry crowd level (Low, Medium, High)."
         },
-        "subject": {
+        "messMenu": {
           "type": "string",
-          "description": "The subject being studied."
+          "description": "The mess menu for the current day."
         },
-        "remainingTime": {
-          "type": "number",
-          "description": "The remaining time in the study session in minutes."
-        },
-        "endTime": {
+        "noiseLevel": {
           "type": "string",
-          "description": "The end time of the focus session."
+          "description": "The current noise level in the hostel."
+        },
+        "complaintStatus": {
+          "type": "string",
+          "description": "Status of any filed complaints"
         }
       },
       "required": [
         "id",
-        "userId",
-        "subject",
-        "remainingTime"
-      ]
-    },
-    "DailyLeaderboardEntry": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "DailyLeaderboardEntry",
-      "type": "object",
-      "description": "Represents a single entry in the daily leaderboard.",
-      "properties": {
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:1 DailyLeaderboardEntry)"
-        },
-        "totalStudyTime": {
-          "type": "number",
-          "description": "Total study time in minutes for the day."
-        }
-      },
-      "required": [
-        "userId",
-        "totalStudyTime"
-      ]
-    },
-    "WeeklyLeaderboardEntry": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "WeeklyLeaderboardEntry",
-      "type": "object",
-      "description": "Represents a single entry in the weekly leaderboard.",
-      "properties": {
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:1 WeeklyLeaderboardEntry)"
-        },
-        "totalStudyTime": {
-          "type": "number",
-          "description": "Total study time in minutes for the week."
-        }
-      },
-      "required": [
-        "userId",
-        "totalStudyTime"
+        "laundryCrowdLevel",
+        "messMenu",
+        "noiseLevel",
+        "complaintStatus"
       ]
     }
   },
@@ -285,31 +216,31 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores user profile information.  Path-based ownership ensures only the user (or admin) can read/write their own profile.",
+          "description": "Stores user profile data. Accessible only by the authenticated user. The 'userId' parameter must match 'request.auth.uid'.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier for the user."
+              "description": "The unique identifier for the user, matching the Firebase Auth UID."
             }
           ]
         }
       },
       {
-        "path": "/users/{userId}/timetables/{timetableId}",
+        "path": "/users/{userId}/timetableSlots/{timetableSlotId}",
         "definition": {
-          "entityName": "Timetable",
+          "entityName": "TimetableSlot",
           "schema": {
-            "$ref": "#/backend/entities/Timetable"
+            "$ref": "#/backend/entities/TimetableSlot"
           },
-          "description": "Stores timetable entries for each user. Path-based ownership.",
+          "description": "Stores timetable slot data for a specific user. Only accessible by the authenticated user.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier for the user."
+              "description": "The unique identifier for the user, matching the Firebase Auth UID."
             },
             {
-              "name": "timetableId",
-              "description": "The unique identifier for the timetable entry."
+              "name": "timetableSlotId",
+              "description": "The unique identifier for the timetable slot."
             }
           ]
         }
@@ -321,11 +252,11 @@
           "schema": {
             "$ref": "#/backend/entities/Task"
           },
-          "description": "Stores tasks assigned to each user. Path-based ownership.",
+          "description": "Stores AI-generated task suggestions for a specific user. Only accessible by the authenticated user.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier for the user."
+              "description": "The unique identifier for the user, matching the Firebase Auth UID."
             },
             {
               "name": "taskId",
@@ -335,82 +266,42 @@
         }
       },
       {
-        "path": "/users/{userId}/focusSessions/{focusSessionId}",
+        "path": "/users/{userId}/academicMetrics/{academicMetricsId}",
         "definition": {
-          "entityName": "FocusSession",
+          "entityName": "AcademicMetrics",
           "schema": {
-            "$ref": "#/backend/entities/FocusSession"
+            "$ref": "#/backend/entities/AcademicMetrics"
           },
-          "description": "Stores focus session logs for each user. Path-based ownership.",
+          "description": "Stores academic performance metrics for a specific user. Only accessible by the authenticated user.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier for the user."
+              "description": "The unique identifier for the user, matching the Firebase Auth UID."
             },
             {
-              "name": "focusSessionId",
-              "description": "The unique identifier for the focus session."
+              "name": "academicMetricsId",
+              "description": "The unique identifier for the academic metrics record."
             }
           ]
         }
       },
       {
-        "path": "/liveStudySessions/{liveStudySessionId}",
+        "path": "/hostelStatus/{hostelStatusId}",
         "definition": {
-          "entityName": "LiveStudySession",
+          "entityName": "HostelStatus",
           "schema": {
-            "$ref": "#/backend/entities/LiveStudySession"
+            "$ref": "#/backend/entities/HostelStatus"
           },
-          "description": "Stores real-time study session data for the 'Who is studying now' feature. The liveStudySessionId matches the userId.  Denormalized to include the subject, remainingTime, and endTime for efficient real-time updates and listing.",
+          "description": "Stores the current status of the hostel environment.",
           "params": [
             {
-              "name": "liveStudySessionId",
-              "description": "The unique identifier for the live study session, which matches the user ID."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/dailyLeaderboard/{date}/{userId}",
-        "definition": {
-          "entityName": "DailyLeaderboardEntry",
-          "schema": {
-            "$ref": "#/backend/entities/DailyLeaderboardEntry"
-          },
-          "description": "Stores daily leaderboard entries. The {date} parameter allows querying for a specific day's leaderboard. The document ID is the user ID. Resets daily using a cloud function.",
-          "params": [
-            {
-              "name": "date",
-              "description": "The date for the daily leaderboard (YYYY-MM-DD)."
-            },
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/weeklyLeaderboard/{yearWeek}/{userId}",
-        "definition": {
-          "entityName": "WeeklyLeaderboardEntry",
-          "schema": {
-            "$ref": "#/backend/entities/WeeklyLeaderboardEntry"
-          },
-          "description": "Stores weekly leaderboard entries. The {yearWeek} parameter allows querying for a specific week's leaderboard. The document ID is the user ID. Resets weekly using a cloud function.",
-          "params": [
-            {
-              "name": "yearWeek",
-              "description": "The year and week number for the weekly leaderboard (YYYY-WW)."
-            },
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
+              "name": "hostelStatusId",
+              "description": "The unique identifier for the hostel status record."
             }
           ]
         }
       }
     ],
-    "reasoning": "This Firestore structure is designed to support the CampusFlow AI application, focusing on focus sessions, live visibility, leaderboards, and user profile stats. The design emphasizes authorization independence, clarity, and scalability.  Authorization Independence is achieved through denormalization in the `LiveStudySessions` collection by storing user information and session details directly within the document. QAPs (Rules are not Filters) is supported via structural segregation, keeping live sessions separate for optimized listing and real-time updates.  The structure leverages path-based ownership for user-specific data and a separate collection for live study sessions to optimize real-time visibility."
+    "reasoning": "The Firestore data structure is designed to support the CampusFlow AI application, focusing on optimizing student time usage, hostel life efficiency, and academic performance. The structure prioritizes authorization independence through path-based ownership and denormalization, ensuring secure and scalable data access. All collections are designed to support secure listing operations.\n\n*   **Users (Private Data):** User profiles are stored under `/users/{userId}`. This path-based ownership ensures that only the authenticated user can access their data. The `userId` is derived from `request.auth.uid`. AcademicMetrics are stored as a subcollection to the user document, allowing for easy retrieval of all user-related data. The HostelStatus data is stored at the root for all users to access.\n*   **Timetable Slots (User-Owned Data):** Timetable slots are stored as a subcollection under each user's document (`/users/{userId}/timetableSlots/{timetableSlotId}`). This hierarchical structure simplifies ownership-based security rules. The timetableSlots collections stores information about the user's timetable. The Task collections stores information about the AI generated task for the user.\n\nThis structure promotes clear security rules, avoids complex `get()` calls, and supports the application's core features efficiently."
   }
 }
