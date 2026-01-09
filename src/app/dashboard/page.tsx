@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import WelcomeHeader from "@/components/dashboard/welcome-header";
-import QuickStats from "@/components/dashboard/quick-stats";
 import Timetable from "@/components/dashboard/timetable";
 import TodoList from "@/components/dashboard/todo-list";
 import { mockUser, mockWeeklyTimetable, getInitialAttendance } from "@/lib/data";
@@ -126,10 +125,6 @@ export default function DashboardPage() {
     return (
         <div className="space-y-6">
             <WelcomeHeader name={mockUser.name} />
-            <QuickStats 
-                productivityScore={mockUser.productivityScore} 
-                cgpa={mockUser.cgpa} 
-            />
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
