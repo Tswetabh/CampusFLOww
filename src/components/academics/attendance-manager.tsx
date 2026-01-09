@@ -12,10 +12,11 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress-ring';
 import type { SubjectAttendance } from '@/lib/types';
 import { format } from 'date-fns';
-import { Check, X, Pencil, Save } from 'lucide-react';
+import { Check, X, Pencil, Save, MoreVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '../ui/skeleton';
 import { Input } from '../ui/input';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 type AttendanceManagerProps = {
   subjects: SubjectAttendance[];
@@ -217,17 +218,33 @@ export function AttendanceManager({
                       status.isOnTrack ? 'text-green-500' : 'text-red-500'
                     )}
                   />
-                  <div className="flex flex-col gap-1">
-                    {isEditingThis ? (
-                       <Button size="icon" className="h-8 w-8" onClick={handleSave}>
-                         <Save className="h-4 w-4" />
-                       </Button>
-                    ) : (
-                       <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => handleEdit(subject)}>
-                         <Pencil className="h-4 w-4" />
-                       </Button>
-                    )}
-                  </div>
+                  {!isEditingThis ? (
+                  <>
+                    <Button size="icon" className="h-8 w-8 bg-green-500/20 text-green-700 hover:bg-green-500/30" onClick={() => onAttendanceChange(subject.name, 'attend')}>
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" className="h-8 w-8 bg-red-500/20 text-red-700 hover:bg-red-500/30" onClick={() => onAttendanceChange(subject.name, 'miss')}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onSelect={() => handleEdit(subject)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </>
+                  ) : (
+                     <Button size="icon" className="h-8 w-8" onClick={handleSave}>
+                       <Save className="h-4 w-4" />
+                     </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
