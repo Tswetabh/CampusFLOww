@@ -3,6 +3,7 @@
 import { CgpaCalculatorCard } from '@/components/academics/cgpa-calculator-card';
 import { AttendanceManager } from '@/components/academics/attendance-manager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AcademicRiskCard } from '@/components/academics/academic-risk-card';
 
 export default function AcademicsPage() {
   return (
@@ -11,15 +12,19 @@ export default function AcademicsPage() {
         Academic Health
       </h1>
       <Tabs defaultValue="attendance">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="attendance">Attendance Manager</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="cgpa">CGPA Calculator</TabsTrigger>
+          <TabsTrigger value="risk">Risk Predictor</TabsTrigger>
         </TabsList>
         <TabsContent value="attendance">
           <AttendanceManager />
         </TabsContent>
         <TabsContent value="cgpa">
           <CgpaCalculatorCard />
+        </TabsContent>
+        <TabsContent value="risk">
+          <AcademicRiskCard />
         </TabsContent>
       </Tabs>
     </div>
