@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Timer, Play, Pause, RotateCcw, Plus, Minus } from 'lucide-react';
+import { Timer, Play, Pause, RotateCcw, Plus, Minus, History } from 'lucide-react';
 import { Progress } from '@/components/ui/progress-ring';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -19,7 +19,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, collection, addDoc, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { Separator } from '../ui/separator';
 
+type InterruptedSession = {
+  subject: string;
+  duration: number; // in seconds
+};
 
 export function FocusTimerCard() {
   const [minutes, setMinutes] = useState(25);
@@ -29,6 +34,7 @@ export function FocusTimerCard() {
   const [initialTime, setInitialTime] = useState(25 * 60);
   const [subject, setSubject] = useState('');
   const [taskType, setTaskType] = useState('');
+  const [interruptedSessions, setInterruptedSessions] = useState<InterruptedSession[]>([]);
   
   const { toast } = useToast();
   const { user } = useUser();
@@ -135,6 +141,10 @@ export function FocusTimerCard() {
   };
 
   const handleReset = () => {
+    const timeSpent = initialTime - totalSeconds;
+    if (timeSpent > 0) {
+      setInterruptedSessions(prev => [...prev, { subject, duration: timeSpent }]);
+    }
     if (user && firestore) {
         const focusSession = {
             userId: user.uid,
@@ -162,6 +172,12 @@ export function FocusTimerCard() {
         deleteDocumentNonBlocking(liveSessionRef);
     }
   };
+  
+  const formatLogTime = (durationInSeconds: number) => {
+    const mins = Math.floor(durationInSeconds / 60);
+    const secs = durationInSeconds % 60;
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
 
   const timePresets = [15, 25, 50, 60];
 
@@ -239,6 +255,23 @@ export function FocusTimerCard() {
                 ))}
             </div>
         </div>
+        {interruptedSessions.length > 0 && (
+            <div className="w-full space-y-3 pt-4">
+                <Separator />
+                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <History className="h-4 w-4" />
+                    <span>Interrupted Sessions</span>
+                </div>
+                <div className="space-y-2 max-h-24 overflow-y-auto pr-2">
+                    {interruptedSessions.map((session, index) => (
+                        <div key={index} className="flex justify-between items-center text-sm p-2 bg-muted/50 rounded-md">
+                            <span className="font-medium text-foreground">{session.subject}</span>
+                            <span className="font-mono text-muted-foreground">{formatLogTime(session.duration)}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )}
       </CardContent>
       <CardFooter className="grid grid-cols-2 gap-4">
         {!isActive ? (
