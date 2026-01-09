@@ -14,7 +14,7 @@ export type TimetableEntry = {
   subject: string;
   startTime: string;
   endTime: string;
-  status: 'scheduled' | 'cancelled';
+  status: 'scheduled' | 'cancelled' | 'attended' | 'missed';
   type: 'lecture' | 'lab' | 'break' | 'task';
 };
 

@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import type { TimetableEntry, Task } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Clock, Book, FlaskConical, Coffee, Sparkles } from 'lucide-react';
+import { Clock, Book, FlaskConical, Coffee, Sparkles, Check, X } from 'lucide-react';
 
 const typeIconMapping = {
   lecture: Book,
@@ -21,13 +21,13 @@ const typeIconMapping = {
 
 type TimetableProps = {
   timetable: TimetableEntry[];
-  toggleStatus: (day: string, id: number) => void;
+  handleAttendanceChange: (subject: string, action: 'attend' | 'miss') => void;
   tasks: Task[];
   replaceTask: (day: string, id: number) => void;
   selectedDay: string;
 };
 
-export default function Timetable({ timetable, toggleStatus, tasks, replaceTask, selectedDay }: TimetableProps) {
+export default function Timetable({ timetable, handleAttendanceChange, tasks, replaceTask, selectedDay }: TimetableProps) {
 
   const isFreeSlot = (entry: TimetableEntry) => {
     return entry.type === 'break' && entry.subject === 'Free Slot';
@@ -38,16 +38,17 @@ export default function Timetable({ timetable, toggleStatus, tasks, replaceTask,
       <CardHeader>
         <CardTitle className="font-headline">{selectedDay}'s Schedule</CardTitle>
         <CardDescription>
-          Here is your schedule for {selectedDay}. Mark classes as cancelled to find free slots.
+          Here is your schedule for {selectedDay}. Mark your attendance for each class.
         </CardDescription>
       </CardHeader>
       <CardContent>
         {timetable.length > 0 ? (
             <ul className="space-y-4">
             {timetable.map((entry) => {
-                const Icon = typeIconMapping[entry.type as keyof typeof typeIconmapping] || Clock;
+                const Icon = typeIconMapping[entry.type as keyof typeof typeIconMapping] || Clock;
                 const isFree = isFreeSlot(entry);
-                const isCancelled = entry.status === 'cancelled';
+                const isAttended = entry.status === 'attended';
+                const isMissed = entry.status === 'missed';
 
                 return (
                 <li
@@ -55,50 +56,44 @@ export default function Timetable({ timetable, toggleStatus, tasks, replaceTask,
                     className={cn(
                     'flex items-center space-x-4 rounded-lg border p-4 transition-all',
                     isFree ? 'bg-accent/10 border-accent/20' : 'bg-card',
-                    isCancelled ? 'bg-muted/50 border-dashed' : ''
+                    isAttended ? 'bg-green-500/10 border-green-500/20' : '',
+                    isMissed ? 'bg-red-500/10 border-red-500/20' : ''
                     )}
                 >
-                    <div className={cn("flex h-10 w-10 items-center justify-center rounded-full", isFree || entry.type === 'task' ? "bg-accent text-accent-foreground" : "bg-primary/10 text-primary")}>
+                    <div className={cn(
+                        "flex h-10 w-10 items-center justify-center rounded-full", 
+                        isFree || entry.type === 'task' ? "bg-accent text-accent-foreground" : "bg-primary/10 text-primary",
+                        isAttended && "bg-green-500/20 text-green-700",
+                        isMissed && "bg-red-500/20 text-red-700"
+                    )}>
                         {isFree ? <Sparkles className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
                     </div>
 
                     <div className="flex-1">
-                    <p className={cn("font-semibold", isCancelled && "line-through")}>{entry.subject}</p>
+                    <p className={cn("font-semibold", (isMissed || isAttended) && "line-through")}>{entry.subject}</p>
                     <p className="text-sm text-muted-foreground">
                         {entry.startTime} - {entry.endTime}
                     </p>
                     </div>
 
-                    {entry.type !== 'break' && (
+                    {entry.type !== 'break' && !isAttended && !isMissed && (
                     <div className="flex gap-2">
-                        {isCancelled ? (
-                            <>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => toggleStatus(entry.day, entry.id)}
-                                    >
-                                    Restore
-                                </Button>
-                                {tasks.length > 0 && (
-                                    <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        onClick={() => replaceTask(entry.day, entry.id)}
-                                    >
-                                        Replace
-                                    </Button>
-                                )}
-                            </>
-                        ) : (
-                            <Button
-                                variant={'outline'}
-                                size="sm"
-                                onClick={() => toggleStatus(entry.day, entry.id)}
-                            >
-                                Cancel
-                            </Button>
-                        )}
+                        <Button
+                            variant={'outline'}
+                            size="icon"
+                            className="h-8 w-8 bg-green-100 hover:bg-green-200 text-green-700"
+                            onClick={() => handleAttendanceChange(entry.subject, 'attend')}
+                        >
+                            <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant={'outline'}
+                            size="icon"
+                            className="h-8 w-8 bg-red-100 hover:bg-red-200 text-red-700"
+                            onClick={() => handleAttendanceChange(entry.subject, 'miss')}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
                     </div>
                     )}
                 </li>

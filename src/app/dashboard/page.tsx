@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import WelcomeHeader from "@/components/dashboard/welcome-header";
 import QuickStats from "@/components/dashboard/quick-stats";
 import Timetable from "@/components/dashboard/timetable";
 import TodoList from "@/components/dashboard/todo-list";
-import { mockUser, mockWeeklyTimetable } from "@/lib/data";
-import type { TimetableEntry, Task } from '@/lib/types';
+import { mockUser, mockWeeklyTimetable, getInitialAttendance } from "@/lib/data";
+import type { TimetableEntry, Task, SubjectAttendance } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { CollegeTimetable } from '@/components/dashboard/college-timetable';
 import { LiveStudyCard } from '@/components/dashboard/live-study-card';
@@ -24,6 +24,11 @@ export default function DashboardPage() {
     const [weeklyTimetable, setWeeklyTimetable] = useState<{ [key: string]: TimetableEntry[] }>(mockWeeklyTimetable);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [selectedDay, setSelectedDay] = useState<string>(getCurrentDay());
+    const [subjects, setSubjects] = useState<SubjectAttendance[]>([]);
+
+    useEffect(() => {
+        setSubjects(getInitialAttendance());
+    }, []);
 
     const handleAddTask = (taskName: string) => {
         const newTask: Task = {
@@ -86,25 +91,30 @@ export default function DashboardPage() {
         }
     };
 
-    const toggleTimetableStatus = (day: string, id: number) => {
+    const handleAttendanceChangeFromTimetable = (subjectName: string, action: 'attend' | 'miss') => {
+        setSubjects(prevSubjects =>
+          prevSubjects.map(subject => {
+            if (subject.name === subjectName) {
+              const newAttended = action === 'attend' ? subject.attended + 1 : subject.attended;
+              const newTotal = subject.total + 1;
+              return { ...subject, attended: newAttended, total: newTotal };
+            }
+            return subject;
+          })
+        );
+    
         setWeeklyTimetable(prev => {
-            const newWeeklyTimetable = {...prev};
-            const daySchedule = newWeeklyTimetable[day];
-            const originalDaySchedule = mockWeeklyTimetable[day];
-
+            const newWeeklyTimetable = { ...prev };
+            const daySchedule = newWeeklyTimetable[selectedDay];
+    
             const newDaySchedule = daySchedule.map(entry => {
-                if (entry.id === id) {
-                    if (entry.status === 'scheduled') {
-                        return { ...entry, status: 'cancelled' };
-                    } else {
-                        const originalEntry = originalDaySchedule.find(e => e.id === id);
-                        return { ...entry, status: 'scheduled', subject: originalEntry?.subject || 'Free Slot', type: originalEntry?.type || 'break' };
-                    }
+                if (entry.subject === subjectName) {
+                    return { ...entry, status: action === 'attend' ? 'attended' : 'missed' };
                 }
                 return entry;
-            })
-
-            newWeeklyTimetable[day] = newDaySchedule;
+            });
+    
+            newWeeklyTimetable[selectedDay] = newDaySchedule;
             return newWeeklyTimetable;
         });
     };
@@ -132,7 +142,7 @@ export default function DashboardPage() {
                     </div>
                     <Timetable 
                         timetable={weeklyTimetable[selectedDay]} 
-                        toggleStatus={toggleTimetableStatus}
+                        handleAttendanceChange={handleAttendanceChangeFromTimetable}
                         tasks={tasks}
                         replaceTask={handleReplaceTask}
                         selectedDay={selectedDay}

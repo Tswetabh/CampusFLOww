@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress-ring';
-import { getInitialAttendance } from '@/lib/data';
 import type { SubjectAttendance } from '@/lib/types';
 import { format } from 'date-fns';
 import {
@@ -42,53 +41,37 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-export function AttendanceManager() {
-  const [subjects, setSubjects] = useState<SubjectAttendance[]>([]);
-  const [loading, setLoading] = useState(true);
+type AttendanceManagerProps = {
+  subjects: SubjectAttendance[];
+  loading: boolean;
+  onAttendanceChange: (subjectName: string, action: 'attend' | 'miss') => void;
+  onAddSubject: (subjectName: string) => void;
+  onResetSubject: (subjectName: string) => void;
+  onDeleteSubject: (subjectName: string) => void;
+};
+
+
+export function AttendanceManager({ 
+    subjects,
+    loading,
+    onAttendanceChange,
+    onAddSubject,
+    onResetSubject,
+    onDeleteSubject
+}: AttendanceManagerProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newSubjectName, setNewSubjectName] = useState('');
   const targetAttendance = 75;
-
-  useEffect(() => {
-    setSubjects(getInitialAttendance());
-    setLoading(false);
-  }, []);
 
   const totalAttended = subjects.reduce((sum, s) => sum + s.attended, 0);
   const totalClasses = subjects.reduce((sum, s) => sum + s.total, 0);
   const overallAttendance =
     totalClasses > 0 ? (totalAttended / totalClasses) * 100 : 0;
-
-  const handleAttendanceChange = (
-    subjectName: string,
-    action: 'attend' | 'miss'
-  ) => {
-    setSubjects((prevSubjects) =>
-      prevSubjects.map((subject) => {
-        if (subject.name === subjectName) {
-          const newAttended =
-            action === 'attend' ? subject.attended + 1 : subject.attended;
-          const newTotal = subject.total + 1;
-          return { ...subject, attended: newAttended, total: newTotal };
-        }
-        return subject;
-      })
-    );
-  };
   
-  const handleAddSubject = () => {
-    if (newSubjectName.trim() === '') return;
-    setSubjects(prev => [...prev, { name: newSubjectName, attended: 0, total: 0 }]);
+  const handleAddSubjectClick = () => {
+    onAddSubject(newSubjectName);
     setNewSubjectName('');
     setIsAddDialogOpen(false);
-  }
-
-  const handleResetSubject = (subjectName: string) => {
-    setSubjects(prev => prev.map(s => s.name === subjectName ? {...s, attended: 0, total: 0} : s));
-  }
-
-  const handleDeleteSubject = (subjectName: string) => {
-    setSubjects(prev => prev.filter(s => s.name !== subjectName));
   }
 
   const getStatus = (attended: number, total: number) => {
@@ -132,7 +115,7 @@ export function AttendanceManager() {
                     <div>
                         <CardDescription>Target: {targetAttendance}%</CardDescription>
                         <Skeleton className="h-7 w-48 mt-1" />
-                        <div className="text-sm text-muted-foreground mt-1">
+                         <div className="text-sm text-muted-foreground mt-1">
                             <Skeleton className="h-4 w-24" />
                         </div>
                     </div>
@@ -209,7 +192,7 @@ export function AttendanceManager() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="button" onClick={handleAddSubject}>Add Subject</Button>
+                        <Button type="button" onClick={handleAddSubjectClick}>Add Subject</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -273,14 +256,14 @@ export function AttendanceManager() {
                     <Button
                       size="icon"
                       className="h-6 w-6 bg-green-100 hover:bg-green-200 text-green-700"
-                      onClick={() => handleAttendanceChange(subject.name, 'attend')}
+                      onClick={() => onAttendanceChange(subject.name, 'attend')}
                     >
                       <Check className="h-4 w-4" />
                     </Button>
                     <Button
                       size="icon"
                       className="h-6 w-6 bg-red-100 hover:bg-red-200 text-red-700"
-                      onClick={() => handleAttendanceChange(subject.name, 'miss')}
+                      onClick={() => onAttendanceChange(subject.name, 'miss')}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -292,12 +275,12 @@ export function AttendanceManager() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleResetSubject(subject.name)}>
+                      <DropdownMenuItem onClick={() => onResetSubject(subject.name)}>
                         Reset
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         className="text-destructive"
-                        onClick={() => handleDeleteSubject(subject.name)}
+                        onClick={() => onDeleteSubject(subject.name)}
                       >
                         Delete
                       </DropdownMenuItem>
