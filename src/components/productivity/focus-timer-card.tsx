@@ -16,6 +16,9 @@ import { Progress } from '@/components/ui/progress-ring';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc, collection, addDoc, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 
 export function FocusTimerCard() {
@@ -28,9 +31,16 @@ export function FocusTimerCard() {
   const [taskType, setTaskType] = useState('');
   
   const { toast } = useToast();
+  const { user } = useUser();
+  const firestore = useFirestore();
 
   const totalSeconds = minutes * 60 + seconds;
   const progress = (totalSeconds / initialTime) * 100;
+
+  const liveSessionRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, `liveStudySessions/${user.uid}`);
+  }, [user, firestore]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -49,7 +59,26 @@ export function FocusTimerCard() {
             title: 'Session Complete!',
             description: `Great job focusing for ${initialTime / 60} minutes.`,
           });
-          // Here you would log the completed session to Firestore
+          if (user && firestore) {
+            const focusSession = {
+                userId: user.uid,
+                subject,
+                taskType,
+                startTime: serverTimestamp(),
+                endTime: serverTimestamp(),
+                duration: initialTime / 60,
+                interrupted: false,
+            };
+            const sessionsRef = collection(firestore, `users/${user.uid}/focusSessions`);
+            addDocumentNonBlocking(sessionsRef, focusSession);
+            
+            const userRef = doc(firestore, `users/${user.uid}`);
+            updateDocumentNonBlocking(userRef, { productivityScore: increment(5) });
+
+            if (liveSessionRef) {
+                deleteDocumentNonBlocking(liveSessionRef);
+            }
+          }
         }
       }, 1000);
     } else if (!isActive && seconds !== 0) {
@@ -63,7 +92,7 @@ export function FocusTimerCard() {
         clearInterval(interval);
       }
     };
-  }, [isActive, isPaused, minutes, seconds, initialTime, toast]);
+  }, [isActive, isPaused, minutes, seconds, initialTime, toast, user, firestore, subject, taskType, liveSessionRef]);
   
   const setTime = useCallback((newMinutes: number) => {
     if (isActive) return;
@@ -83,10 +112,22 @@ export function FocusTimerCard() {
         })
         return;
     }
-    setInitialTime(minutes * 60 + seconds);
+    const calculatedInitialTime = minutes * 60 + seconds;
+    setInitialTime(calculatedInitialTime);
     setIsActive(true);
     setIsPaused(false);
-    // Here you would create the /liveStudySessions/{userId} document
+    
+    if (liveSessionRef) {
+        const endTime = new Date();
+        endTime.setSeconds(endTime.getSeconds() + calculatedInitialTime);
+        addDocumentNonBlocking(liveSessionRef, {
+            subject: subject,
+            remainingTime: minutes,
+            endTime: endTime.toISOString(),
+            userId: user?.uid,
+            id: user?.uid,
+        });
+    }
   };
   
   const handlePauseResume = () => {
@@ -94,12 +135,32 @@ export function FocusTimerCard() {
   };
 
   const handleReset = () => {
+    if (user && firestore) {
+        const focusSession = {
+            userId: user.uid,
+            subject,
+            taskType,
+            startTime: serverTimestamp(),
+            endTime: serverTimestamp(),
+            duration: Math.round((initialTime - totalSeconds) / 60),
+            interrupted: true,
+        };
+        const sessionsRef = collection(firestore, `users/${user.uid}/focusSessions`);
+        addDocumentNonBlocking(sessionsRef, focusSession);
+        
+        const userRef = doc(firestore, `users/${user.uid}`);
+        updateDocumentNonBlocking(userRef, { productivityScore: increment(-1) });
+    }
+
     setIsActive(false);
     setIsPaused(false);
     setTime(25);
     setSubject('');
     setTaskType('');
-    // Here you would delete the /liveStudySessions/{userId} document and log the (interrupted) session
+
+    if (liveSessionRef) {
+        deleteDocumentNonBlocking(liveSessionRef);
+    }
   };
 
   const timePresets = [15, 25, 50, 60];
@@ -181,7 +242,7 @@ export function FocusTimerCard() {
       </CardContent>
       <CardFooter className="grid grid-cols-2 gap-4">
         {!isActive ? (
-            <Button onClick={handleStart} className="col-span-2">
+            <Button onClick={handleStart} className="col-span-2" disabled={!user}>
                 <Play className="mr-2 h-4 w-4" /> Start Session
             </Button>
         ) : (
@@ -191,7 +252,7 @@ export function FocusTimerCard() {
                     {isPaused ? 'Resume' : 'Pause'}
                 </Button>
                 <Button variant="destructive" onClick={handleReset}>
-                    <RotateCcw className="mr-2 h-4 w-4" /> Reset
+                    <RotateCcw className="mr-2 h-4 w-4" /> Give Up
                 </Button>
             </>
         )}

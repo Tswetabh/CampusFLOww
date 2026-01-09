@@ -31,11 +31,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { cn } from '@/lib/utils';
 import { Slider } from '../ui/slider';
+import { useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
 
 const formSchema = z.object({
   attendancePercentage: z.coerce.number().min(0).max(100),
   assignmentsDelayed: z.coerce.number().min(0),
-  productivityScore: z.coerce.number().min(0).max(100),
   selfReportedStress: z.coerce.number().min(1).max(5),
 });
 
@@ -45,22 +47,42 @@ export function AcademicRiskCard() {
     null
   );
   const { toast } = useToast();
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const userRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, `users/${user.uid}`);
+  }, [user, firestore]);
+
+  const { data: userData } = useDoc(userRef);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       attendancePercentage: 75,
       assignmentsDelayed: 2,
-      productivityScore: 60,
       selfReportedStress: 3,
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!userData) {
+        toast({
+            variant: 'destructive',
+            title: 'User data not loaded.',
+            description: 'Please wait a moment and try again.'
+        });
+        return;
+    }
     setLoading(true);
     setResult(null);
     try {
-      const res = await academicRiskPredictor(values);
+      const payload = {
+        ...values,
+        productivityScore: userData.productivityScore || 0,
+      }
+      const res = await academicRiskPredictor(payload);
       setResult(res);
     } catch (error) {
       console.error(error);
@@ -79,14 +101,13 @@ export function AcademicRiskCard() {
       <CardHeader>
         <CardTitle className="font-headline">Academic Risk Predictor</CardTitle>
         <CardDescription>
-          Get an AI-powered analysis of your current academic standing and
-          actionable advice to stay on track.
+          Your productivity score is now calculated automatically. Adjust the sliders below and get an AI-powered analysis of your academic standing.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="attendancePercentage"
@@ -113,24 +134,14 @@ export function AcademicRiskCard() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="productivityScore"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Productivity Score</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="e.g., 78"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
+             {userData && (
+                <div className='p-4 rounded-lg bg-muted'>
+                    <FormLabel>Productivity Score (auto-calculated)</FormLabel>
+                    <div className='text-3xl font-bold text-primary'>{userData.productivityScore}</div>
+                    <p className='text-xs text-muted-foreground'>This score is based on your completed focus sessions.</p>
+                </div>
+            )}
             <FormField
               control={form.control}
               name="selfReportedStress"

@@ -7,15 +7,20 @@ import { AcademicRiskCard } from '@/components/academics/academic-risk-card';
 import { useState, useEffect } from 'react';
 import type { SubjectAttendance } from '@/lib/types';
 import { getInitialAttendance } from '@/lib/data';
-
+import { useUser } from '@/firebase';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { Logo } from '@/components/icons';
 
 export default function AcademicsPage() {
   const [subjects, setSubjects] = useState<SubjectAttendance[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user, isUserLoading } = useUser();
 
   useEffect(() => {
-      setSubjects(getInitialAttendance());
-      setLoading(false);
+    setSubjects(getInitialAttendance());
+    setLoading(false);
   }, []);
 
   const handleAttendanceChange = (
@@ -34,18 +39,50 @@ export default function AcademicsPage() {
       })
     );
   };
-  
+
   const handleAddSubject = (newSubjectName: string) => {
     if (newSubjectName.trim() === '') return;
-    setSubjects(prev => [...prev, { name: newSubjectName, attended: 0, total: 0 }]);
-  }
+    setSubjects((prev) => [
+      ...prev,
+      { name: newSubjectName, attended: 0, total: 0 },
+    ]);
+  };
 
   const handleResetSubject = (subjectName: string) => {
-    setSubjects(prev => prev.map(s => s.name === subjectName ? {...s, attended: 0, total: 0} : s));
-  }
+    setSubjects((prev) =>
+      prev.map((s) => (s.name === subjectName ? { ...s, attended: 0, total: 0 } : s))
+    );
+  };
 
   const handleDeleteSubject = (subjectName: string) => {
-    setSubjects(prev => prev.filter(s => s.name !== subjectName));
+    setSubjects((prev) => prev.filter((s) => s.name !== subjectName));
+  };
+
+  if (isUserLoading) {
+    return <div>Loading...</div>;
+  }
+  
+  if (!user) {
+    return (
+       <div className="flex items-center justify-center h-[80vh]">
+        <Card className="mx-auto max-w-sm w-full">
+          <CardHeader className="text-center">
+            <div className="flex justify-center items-center mb-4">
+              <Logo className="h-10 w-10 text-primary" />
+            </div>
+            <CardTitle className="text-2xl font-headline">Access Denied</CardTitle>
+            <CardDescription>
+              You need to be logged in to view this page.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Button asChild>
+                <Link href="/login">Login</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
 
@@ -61,7 +98,7 @@ export default function AcademicsPage() {
           <TabsTrigger value="risk">AI Risk Analysis</TabsTrigger>
         </TabsList>
         <TabsContent value="attendance">
-          <AttendanceManager 
+          <AttendanceManager
             subjects={subjects}
             loading={loading}
             onAttendanceChange={handleAttendanceChange}
@@ -74,7 +111,7 @@ export default function AcademicsPage() {
           <CgpaCalculatorCard />
         </TabsContent>
         <TabsContent value="risk">
-            <AcademicRiskCard />
+          <AcademicRiskCard />
         </TabsContent>
       </Tabs>
     </div>
