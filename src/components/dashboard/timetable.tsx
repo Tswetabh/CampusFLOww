@@ -74,9 +74,6 @@ export default function Timetable({ timetable, handleAttendanceChange, tasks, re
 
                     <div className="flex-1">
                     <p className={cn("font-semibold", (isMissed || isAttended || isCancelled) && "line-through")}>{entry.subject}</p>
-                    <p className="text-sm text-muted-foreground">
-                        {entry.startTime} - {entry.endTime}
-                    </p>
                     </div>
 
                     {entry.type !== 'break' && !isAttended && !isMissed && !isCancelled && (
