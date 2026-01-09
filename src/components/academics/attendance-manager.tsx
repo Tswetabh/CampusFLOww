@@ -12,11 +12,11 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress-ring';
 import type { SubjectAttendance } from '@/lib/types';
 import { format } from 'date-fns';
-import { Check, X, Pencil, Save, MoreVertical } from 'lucide-react';
+import { Check, X, Pencil, Save, MoreVertical, RotateCcw, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '../ui/skeleton';
 import { Input } from '../ui/input';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
 
 type AttendanceManagerProps = {
   subjects: SubjectAttendance[];
@@ -30,6 +30,8 @@ type AttendanceManagerProps = {
     attended: number,
     total: number
   ) => void;
+  onReset: (subjectName: string) => void;
+  onDelete: (subjectName: string) => void;
 };
 
 export function AttendanceManager({
@@ -37,6 +39,8 @@ export function AttendanceManager({
   loading,
   onAttendanceChange,
   onManualUpdate,
+  onReset,
+  onDelete,
 }: AttendanceManagerProps) {
   const [editing, setEditing] = useState<
     { subject: string; attended: string; total: string } | undefined
@@ -69,7 +73,13 @@ export function AttendanceManager({
   };
 
   const getStatus = (attended: number, total: number) => {
-    const currentPercentage = total > 0 ? (attended / total) * 100 : 0;
+    if (total === 0) {
+        return {
+            text: 'No classes yet',
+            isOnTrack: true
+        }
+    }
+    const currentPercentage = (attended / total) * 100;
     if (currentPercentage >= targetAttendance) {
       const canMiss = Math.floor(
         (attended - targetAttendance * 0.01 * total) /
@@ -236,6 +246,15 @@ export function AttendanceManager({
                         <DropdownMenuItem onSelect={() => handleEdit(subject)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => onReset(subject.name)}>
+                          <RotateCcw className="mr-2 h-4 w-4" />
+                          Reset
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                         <DropdownMenuItem onSelect={() => onDelete(subject.name)} className="text-red-600">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
