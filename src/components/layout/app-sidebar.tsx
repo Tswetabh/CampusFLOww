@@ -39,9 +39,10 @@ import { auth } from "@/firebase/auth";
 
 const navItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
-  { href: "/dashboard/academics", icon: BookOpen, label: "Academics" },
-  { href: "/dashboard/tracker", icon: ClipboardList, label: "Tracker" },
-  { href: "/dashboard/hostel", icon: Building2, label: "Hostel" },
+  { href: "/dashboard/insights", icon: BrainCircuit, label: "Insights" },
+    { href: "/dashboard/academics", icon: BookOpen, label: "Academics" },
+    { href: "/dashboard/tracker", icon: ClipboardList, label: "Tracker" },
+    
   {
     href: "/dashboard/productivity",
     icon: BrainCircuit,

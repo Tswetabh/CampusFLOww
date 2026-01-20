@@ -40,19 +40,34 @@ export async function POST(req: Request) {
       }
     );
 
-    const data = await response.json();
+    // Read response body as text first for safer error handling
+    const text = await response.text();
+    let data: any = null;
+    try {
+      data = JSON.parse(text || '{}');
+    } catch (e) {
+      data = { raw: text };
+    }
 
     if (!response.ok) {
-      console.error("Groq error:", data);
+      console.error('Groq error status=', response.status, 'body=', data);
       return NextResponse.json(
-        { error: "AI failed to answer" },
+        { error: 'AI failed to answer', providerStatus: response.status, providerBody: data },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({
-      answer: data.choices[0].message.content,
-    });
+    // safe access to choice content
+    const answer = data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.text ?? null;
+    if (!answer) {
+      console.error('AI response missing expected content:', data);
+      return NextResponse.json(
+        { error: 'AI returned no content', providerBody: data },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ answer });
   } catch (err) {
     console.error("Server error:", err);
     return NextResponse.json(

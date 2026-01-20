@@ -180,13 +180,13 @@ export default function WelcomeHeader() {
         )}
       </div>
       <div className="flex items-center gap-2">
-        <ThemeToggle variant="pill" />
         <button
           onClick={handleGoToUpload}
           className="px-3 py-2 rounded-full border-2 border-slate-900 bg-white text-sm text-slate-700 hover:bg-slate-900 hover:text-white transition"
         >
           Upload Timetable
         </button>
+        <ThemeToggle variant="pill" />
         <button
           onClick={handleLogout}
           disabled={loading}

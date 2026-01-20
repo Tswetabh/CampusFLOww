@@ -7,6 +7,7 @@ import TodoList from "@/components/dashboard/todo-list";
 import { Button } from '@/components/ui/button';
 import { CollegeTimetable } from '@/components/dashboard/college-timetable';
 import { LiveStudyCard } from '@/components/dashboard/live-study-card';
+import { AIChatBox } from '@/components/dashboard/ai-chat';
 import { useToast } from '@/hooks/use-toast';
 import { useAppContext } from '@/context/AppContext';
 
@@ -221,6 +222,7 @@ export default function DashboardPage() {
                         onTaskDelete={deleteTask}
                         onMoveTask={handleMoveTaskToSchedule}
                     />
+                    <AIChatBox />
                     <LiveStudyCard />
                 </div>
             </div>

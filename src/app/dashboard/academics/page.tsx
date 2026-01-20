@@ -50,7 +50,7 @@ export default function AcademicsPage() {
   const router = useRouter();
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-[980px] space-y-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="font-headline text-3xl font-bold tracking-tighter">
           Academic Health
